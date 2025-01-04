@@ -53,6 +53,26 @@
 typedef void (*ev_callback_t)(EV_P_ ev_timer *w, int revents);
 static void input_done(void);
 
+const char HELP_MSG[] =
+    "Usage: i3lock-ng [OPTION...]\n\n"
+    "Options:\n"
+    "\t-u, --no-unlock-indicator   Disable the unlock indicator.\n"
+    "\t-f, --show-failed-attempts  Show the number of failed attempts.\n"
+    "\t-t, --tiling                Display image tiled.\n"
+    "\t    --raw FORMAT            Read raw image instead of PNG.\n"
+    "\t-p, --pointer {win|default} Use default/Windows pointer.\n"
+    "\t-c, --color RRGGBB          Use specified color instead of white.\n"
+    "\t-e, --ignore_empty_password Do not validate empty password.\n"
+    "\t-i, --image IMAGE           Display the given PNG image instead of\n"
+    "\t                            a blank screen.\n"
+    "\n"
+    "\t    --debug  Enable debug logging.\n"
+    "\t-n, --nofork Don't fork after starting.\n"
+    "\t-b, --beep   Enable beeping.\n"
+    "\n"
+    "\t-h, --help    Display this help message and exit.\n"
+    "\t-v, --version Display version and exit.\n";
+
 char color[7] = "a3a3a3";
 uint32_t last_resolution[2];
 xcb_window_t win;
@@ -1125,9 +1145,7 @@ int main(int argc, char *argv[]) {
       code = EXIT_SUCCESS;
       /* fallthrough */
     default:
-      errx(code,
-           "Syntax: i3lock [-v] [-n] [-b] [-d] [-c color] [-u] [-p win|default]"
-           " [-i image.png] [-t] [-e] [-I timeout] [-f] [-k]");
+      errx(code, HELP_MSG);
     }
   }
 
