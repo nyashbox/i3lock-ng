@@ -6,10 +6,14 @@
 #ifndef _I3LOCK_NG_H_
 #define _I3LOCK_NG_H_
 
-/* This macro will only print debug output when started with --debug.
- * This is important because xautolock (for example) closes stdout/stderr by
- * default, so just printing something to stdout will lead to the data ending
- * up on the X11 socket (!). */
+//! @brief Print debug output
+//!
+//! This macro will only print debug output when started with --debug.
+//! This is important because xautolock (for example) closes stdout/stderr by
+//! default, so just printing something to stdout will lead to the data ending
+//! up on the X11 socket (!).
+//!
+//! @return Nothing
 #define DEBUG(fmt, ...)                                                        \
   do {                                                                         \
     if (debug_mode) {                                                          \
