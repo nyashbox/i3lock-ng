@@ -59,3 +59,5 @@ add_executable(i3lock-ng i3lock-ng.c)
 target_link_libraries(i3lock-ng 
         i3lock-ng::i3lock-ng
 )
+
+install(TARGETS i3lock-ng DESTINATION bin)
