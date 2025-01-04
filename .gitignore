@@ -5,3 +5,6 @@ tags
 
 # build directories
 /[Bb]uild
+
+# compilation database
+compile_commands.json
