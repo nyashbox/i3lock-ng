@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _I3LOCK_NG_DPI_H_
+#define _I3LOCK_NG_DPI_H_
 
 /**
  * Initialize the DPI setting.
@@ -20,3 +21,5 @@ long get_dpi_value(void);
  *
  */
 int logical_px(const int logical);
+
+#endif // _I3LOCK_NG_DPI_H_

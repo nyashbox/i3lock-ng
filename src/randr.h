@@ -1,5 +1,5 @@
-#ifndef _XINERAMA_H
-#define _XINERAMA_H
+#ifndef _I3LOCK_NG_RANDR_H_
+#define _I3LOCK_NG_RANDR_H_
 
 typedef struct Rect {
   int16_t x;
@@ -14,4 +14,4 @@ extern Rect *xr_resolutions;
 void randr_init(int *event_base, xcb_window_t root);
 void randr_query(xcb_window_t root);
 
-#endif
+#endif // _I3LOCK_NG_RANDR_H_

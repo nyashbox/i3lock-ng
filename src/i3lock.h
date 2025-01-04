@@ -1,5 +1,5 @@
-#ifndef _I3LOCK_H
-#define _I3LOCK_H
+#ifndef _I3LOCK_NG_H_
+#define _I3LOCK_NG_H_
 
 /* This macro will only print debug output when started with --debug.
  * This is important because xautolock (for example) closes stdout/stderr by
@@ -12,4 +12,4 @@
     }                                                                          \
   } while (0)
 
-#endif
+#endif // _I3LOCK_NG_H_

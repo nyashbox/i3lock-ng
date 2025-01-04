@@ -1,5 +1,5 @@
-#ifndef _UNLOCK_INDICATOR_H
-#define _UNLOCK_INDICATOR_H
+#ifndef _I3LOCK_NG_UNLOCK_INDICATOR_H_
+#define _I3LOCK_NG_UNLOCK_INDICATOR_H_
 
 #include <xcb/xcb.h>
 
@@ -28,4 +28,4 @@ void draw_image(xcb_pixmap_t bg_pixmap, uint32_t *resolution);
 void redraw_screen(void);
 void clear_indicator(void);
 
-#endif
+#endif // _I3LOCK_NG_UNLOCK_INDICATOR_H_

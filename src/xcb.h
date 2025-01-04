@@ -1,5 +1,5 @@
-#ifndef _XCB_H
-#define _XCB_H
+#ifndef _I3LOCK_NG_XCB_H_
+#define _I3LOCK_NG_XCB_H_
 
 #include <stdbool.h>
 #include <xcb/xcb.h>
@@ -21,4 +21,4 @@ xcb_window_t find_focused_window(xcb_connection_t *conn,
 void set_focused_window(xcb_connection_t *conn, const xcb_window_t root,
                         const xcb_window_t window);
 
-#endif
+#endif // _I3LOCK_NG_XCB_H_
