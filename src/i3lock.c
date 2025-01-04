@@ -1074,8 +1074,7 @@ int main(int argc, char *argv[]) {
          -1) {
     switch (o) {
     case 'v':
-      errx(EXIT_SUCCESS,
-           "version " I3LOCK_VERSION " © 2010 Michael Stapelberg");
+      errx(EXIT_SUCCESS, "version " I3LOCK_VERSION);
     case 'n':
       dont_fork = true;
       break;
