@@ -1,11 +1,8 @@
-/*
- * vim:ts=4:sw=4:expandtab
- *
- * © 2010 Michael Stapelberg
- *
- * See LICENSE for licensing information
- *
- */
+
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2009-2010 Michael Stapelberg and Contributors
+// Copyright (c) 2025 nyashbox and Contributors
+
 #include <config.h>
 
 #include <assert.h>

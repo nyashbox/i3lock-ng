@@ -1,3 +1,7 @@
+
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025 nyashbox and Contributors
+
 cmake_minimum_required(VERSION 3.25.1)
 
 project(

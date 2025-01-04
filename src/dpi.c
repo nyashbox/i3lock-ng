@@ -1,10 +1,8 @@
-/*
- * vim:ts=4:sw=4:expandtab
- *
- * i3 - an improved tiling window manager
- * © 2009 Michael Stapelberg and contributors (see also: LICENSE)
- *
- */
+
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2009-2010 Michael Stapelberg and Contributors
+// Copyright (c) 2025 nyashbox and Contributors
+
 #include "dpi.h"
 
 #include "i3lock.h"

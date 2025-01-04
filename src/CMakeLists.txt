@@ -1,3 +1,7 @@
+
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025 nyashbox and Contributors
+
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)

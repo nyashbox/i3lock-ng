@@ -1,12 +1,8 @@
-/*
- * vim:ts=4:sw=4:expandtab
- *
- * © 2010 Michael Stapelberg
- *
- * xcb.c: contains all functions which use XCB to talk to X11. Mostly wrappers
- *        around the rather complicated/ugly parts of the XCB API.
- *
- */
+
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2009-2010 Michael Stapelberg and Contributors
+// Copyright (c) 2025 nyashbox and Contributors
+
 #include <assert.h>
 #include <err.h>
 #include <stdbool.h>
