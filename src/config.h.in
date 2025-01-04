@@ -1,0 +1,6 @@
+#ifndef _I3LOCK_NG_CONFIG_H_
+#define _I3LOCK_NG_CONFIG_H_
+
+#define I3LOCK_VERSION "@PROJECT_VERSION@"
+
+#endif  // _I3LOCK_NG_CONFIG_H_

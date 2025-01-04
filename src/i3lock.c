@@ -99,7 +99,7 @@ bool ignore_empty_password = false;
 bool skip_repeated_empty_password = false;
 
 /* isutf, u8_dec © 2005 Jeff Bezanson, public domain */
-#define isutf(c) (((c)&0xC0) != 0x80)
+#define isutf(c) (((c) & 0xC0) != 0x80)
 
 /*
  * Decrements i to point to the previous unicode glyph
