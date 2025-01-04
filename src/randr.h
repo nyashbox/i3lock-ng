@@ -1,6 +1,9 @@
 #ifndef _I3LOCK_NG_RANDR_H_
 #define _I3LOCK_NG_RANDR_H_
 
+#include <stdint.h>
+#include <xcb/xcb.h>
+
 typedef struct Rect {
   int16_t x;
   int16_t y;
