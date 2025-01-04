@@ -12,7 +12,6 @@
 #include <xcb/xinerama.h>
 
 #include "core/logging.h"
-#include "i3lock-ng.h"
 #include "randr.h"
 #include "xcb.h"
 

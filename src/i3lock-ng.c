@@ -40,7 +40,6 @@
 #include "core/logging.h"
 #include "cursors.h"
 #include "dpi.h"
-#include "i3lock-ng.h"
 #include "randr.h"
 #include "unlock_indicator.h"
 #include "xcb.h"
