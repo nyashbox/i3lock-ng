@@ -5,7 +5,7 @@
 
 #include "dpi.h"
 
-#include "i3lock.h"
+#include "i3lock-ng.h"
 #include "xcb.h"
 #include <math.h>
 #include <stdio.h>

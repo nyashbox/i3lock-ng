@@ -54,7 +54,7 @@ target_compile_definitions(i3lock_ng_obj
     PUBLIC 
         _GNU_SOURCE)
 
-add_executable(i3lock-ng i3lock.c)
+add_executable(i3lock-ng i3lock-ng.c)
 target_link_libraries(i3lock-ng 
         i3lock-ng::i3lock-ng
 )
