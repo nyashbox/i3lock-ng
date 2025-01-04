@@ -19,6 +19,7 @@ pkg_check_modules(XKB_COMMON_X11 REQUIRED IMPORTED_TARGET xkbcommon-x11>=0.5.0)
 find_library(libev REQUIRED NAMES ev)
 
 set(I3LOCK-NG_SRCS
+    core/logging.c
     dpi.c
     randr.c
     unlock_indicator.c

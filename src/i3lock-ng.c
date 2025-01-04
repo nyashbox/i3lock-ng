@@ -37,6 +37,7 @@
 #include <xcb/randr.h>
 #include <xcb/xcb_aux.h>
 
+#include "core/logging.h"
 #include "cursors.h"
 #include "dpi.h"
 #include "i3lock-ng.h"
@@ -143,7 +144,7 @@ static bool load_keymap(void) {
   }
 
   int32_t device_id = xkb_x11_get_core_keyboard_device_id(conn);
-  DEBUG("device = %d\n", device_id);
+  LKNG_LOGGER_DEBUG("device = %d\n", device_id);
   struct xkb_keymap *new_keymap =
       xkb_x11_keymap_new_from_device(xkb_context, conn, device_id, 0);
   if (new_keymap == NULL) {
@@ -259,7 +260,7 @@ static void finish_input(void) {
  *
  */
 static void clear_auth_wrong(EV_P_ ev_timer *w, int revents) {
-  DEBUG("clearing auth wrong\n");
+  LKNG_LOGGER_DEBUG("clearing auth wrong\n");
   auth_state = STATE_AUTH_IDLE;
   redraw_screen();
 
@@ -309,7 +310,7 @@ static void input_done(void) {
   }
 
   if (auth_userokay(pw->pw_name, NULL, NULL, password) != 0) {
-    DEBUG("successfully authenticated\n");
+    LKNG_LOGGER_DEBUG("successfully authenticated\n");
     clear_password_memory();
 
     ev_break(EV_DEFAULT, EVBREAK_ALL);
@@ -317,7 +318,7 @@ static void input_done(void) {
   }
 #else
   if (pam_authenticate(pam_handle, 0) == PAM_SUCCESS) {
-    DEBUG("successfully authenticated\n");
+    LKNG_LOGGER_DEBUG("successfully authenticated\n");
     clear_password_memory();
 
     /* PAM credentials should be refreshed, this will for example update any
@@ -460,7 +461,7 @@ static void handle_key_press(xcb_key_press_event_t *event) {
   case XKB_KEY_u:
   case XKB_KEY_Escape:
     if ((ksym == XKB_KEY_u && ctrl) || ksym == XKB_KEY_Escape) {
-      DEBUG("C-u pressed\n");
+      LKNG_LOGGER_DEBUG("C-u pressed\n");
       clear_input();
       /* Also hide the unlock indicator */
       if (unlock_indicator) {
@@ -526,7 +527,7 @@ static void handle_key_press(xcb_key_press_event_t *event) {
   /* store it in the password array as UTF-8 */
   memcpy(password + input_position, buffer, n - 1);
   input_position += n - 1;
-  DEBUG("current password = %.*s\n", input_position, password);
+  LKNG_LOGGER_DEBUG("current password = %.*s\n", input_position, password);
 
   if (unlock_indicator) {
     unlock_state = STATE_KEY_ACTIVE;
@@ -581,7 +582,7 @@ static void process_xkb_event(xcb_generic_event_t *gevent) {
     xcb_xkb_state_notify_event_t state_notify;
   } *event = (union xkb_event *)gevent;
 
-  DEBUG("process_xkb_event for device %d\n", event->any.deviceID);
+  LKNG_LOGGER_DEBUG("process_xkb_event for device %d\n", event->any.deviceID);
 
   if (event->any.deviceID != xkb_x11_get_core_keyboard_device_id(conn)) {
     return;
@@ -999,38 +1000,38 @@ static void raise_loop(xcb_window_t window) {
                                             XCB_EVENT_MASK_STRUCTURE_NOTIFY});
   xcb_flush(conn);
 
-  DEBUG("Watching window 0x%08x\n", window);
+  LKNG_LOGGER_DEBUG("Watching window 0x%08x\n", window);
   while ((event = xcb_wait_for_event(conn)) != NULL) {
     if (event->response_type == 0) {
       xcb_generic_error_t *error = (xcb_generic_error_t *)event;
-      DEBUG("X11 Error received! sequence 0x%x, error_code = %d\n",
-            error->sequence, error->error_code);
+      LKNG_LOGGER_DEBUG("X11 Error received! sequence 0x%x, error_code = %d\n",
+                        error->sequence, error->error_code);
       free(event);
       continue;
     }
     /* Strip off the highest bit (set if the event is generated) */
     int type = (event->response_type & 0x7F);
-    DEBUG("Read event of type %d\n", type);
+    LKNG_LOGGER_DEBUG("Read event of type %d\n", type);
     switch (type) {
     case XCB_VISIBILITY_NOTIFY:
       handle_visibility_notify(conn, (xcb_visibility_notify_event_t *)event);
       break;
     case XCB_UNMAP_NOTIFY:
-      DEBUG("UnmapNotify for 0x%08x\n",
-            (((xcb_unmap_notify_event_t *)event)->window));
+      LKNG_LOGGER_DEBUG("UnmapNotify for 0x%08x\n",
+                        (((xcb_unmap_notify_event_t *)event)->window));
       if (((xcb_unmap_notify_event_t *)event)->window == window) {
         exit(EXIT_SUCCESS);
       }
       break;
     case XCB_DESTROY_NOTIFY:
-      DEBUG("DestroyNotify for 0x%08x\n",
-            (((xcb_destroy_notify_event_t *)event)->window));
+      LKNG_LOGGER_DEBUG("DestroyNotify for 0x%08x\n",
+                        (((xcb_destroy_notify_event_t *)event)->window));
       if (((xcb_destroy_notify_event_t *)event)->window == window) {
         exit(EXIT_SUCCESS);
       }
       break;
     default:
-      DEBUG("Unhandled event type %d\n", type);
+      LKNG_LOGGER_DEBUG("Unhandled event type %d\n", type);
       break;
     }
     free(event);
@@ -1038,6 +1039,12 @@ static void raise_loop(xcb_window_t window) {
 }
 
 int main(int argc, char *argv[]) {
+  // initialize logger
+  lkng_logger_init(&LKNG_DEFAULT_LOGGER);
+  lkng_logger_add_stderr_sink(&LKNG_DEFAULT_LOGGER);
+
+  LKNG_LOGGER_FATAL("This is fatal message!\n");
+
   struct passwd *pw;
   char *username;
   char *image_path = NULL;
@@ -1130,6 +1137,8 @@ int main(int argc, char *argv[]) {
     case 0:
       if (strcmp(longopts[longoptind].name, "debug") == 0) {
         debug_mode = true;
+        lkng_logger_set_level(&LKNG_DEFAULT_LOGGER, LOG_DEBUG);
+        lkng_logger_add_stdout_sink(&LKNG_DEFAULT_LOGGER);
       } else if (strcmp(longopts[longoptind].name, "raw") == 0) {
         image_raw_format = strdup(optarg);
       }
@@ -1288,7 +1297,7 @@ int main(int argc, char *argv[]) {
    */
   auth_state = STATE_AUTH_LOCK;
   if (!grab_pointer_and_keyboard(conn, screen, cursor, 1000)) {
-    DEBUG("stole focus from X11 window 0x%08x\n", stolen_focus);
+    LKNG_LOGGER_DEBUG("stole focus from X11 window 0x%08x\n", stolen_focus);
 
     /* Set the focus to i3lock, possibly closing context menus which would
      * otherwise prevent us from grabbing keyboard/pointer.
@@ -1365,12 +1374,14 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  DEBUG("restoring focus to X11 window 0x%08x\n", stolen_focus);
+  LKNG_LOGGER_DEBUG("restoring focus to X11 window 0x%08x\n", stolen_focus);
   xcb_ungrab_pointer(conn, XCB_CURRENT_TIME);
   xcb_ungrab_keyboard(conn, XCB_CURRENT_TIME);
   xcb_destroy_window(conn, win);
   set_focused_window(conn, screen->root, stolen_focus);
   xcb_aux_sync(conn);
+
+  lkng_logger_close_file_sinks(&LKNG_DEFAULT_LOGGER);
 
   return 0;
 }

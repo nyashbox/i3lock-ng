@@ -20,6 +20,8 @@
 #include "unlock_indicator.h"
 #include "xcb.h"
 
+#include "core/logging.h"
+
 #define BUTTON_RADIUS 90
 #define BUTTON_SPACE (BUTTON_RADIUS + 5)
 #define BUTTON_CENTER (BUTTON_RADIUS + 5)
@@ -175,8 +177,8 @@ static void check_modifier_keys(void) {
 void draw_image(xcb_pixmap_t bg_pixmap, uint32_t *resolution) {
   const double scaling_factor = get_dpi_value() / 96.0;
   int button_diameter_physical = ceil(scaling_factor * BUTTON_DIAMETER);
-  DEBUG("scaling_factor is %.f, physical diameter is %d px\n", scaling_factor,
-        button_diameter_physical);
+  LKNG_LOGGER_DEBUG("scaling_factor is %.f, physical diameter is %d px\n",
+                    scaling_factor, button_diameter_physical);
 
   if (!vistype) {
     vistype = get_root_visual_type(screen);
@@ -417,8 +419,8 @@ void free_bg_pixmap(void) {
  *
  */
 void redraw_screen(void) {
-  DEBUG("redraw_screen(unlock_state = %d, auth_state = %d)\n", unlock_state,
-        auth_state);
+  LKNG_LOGGER_DEBUG("redraw_screen(unlock_state = %d, auth_state = %d)\n",
+                    unlock_state, auth_state);
 
   if (modifier_string) {
     free(modifier_string);
@@ -428,8 +430,8 @@ void redraw_screen(void) {
   update_layout_string();
 
   if (bg_pixmap == XCB_NONE) {
-    DEBUG("allocating pixmap for %d x %d px\n", last_resolution[0],
-          last_resolution[1]);
+    LKNG_LOGGER_DEBUG("allocating pixmap for %d x %d px\n", last_resolution[0],
+                      last_resolution[1]);
     bg_pixmap = create_bg_pixmap(conn, screen, last_resolution, color);
   }
 

@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <xcb/xcb_xrm.h>
 
+#include "core/logging.h"
+
 extern bool debug_mode;
 
 static long dpi;
@@ -38,27 +40,28 @@ void init_dpi(void) {
 
   database = xcb_xrm_database_from_default(conn);
   if (database == NULL) {
-    DEBUG("Failed to open the resource database.\n");
+    LKNG_LOGGER_DEBUG("Failed to open the resource database.\n");
     goto init_dpi_end;
   }
 
   xcb_xrm_resource_get_string(database, "Xft.dpi", NULL, &resource);
   if (resource == NULL) {
-    DEBUG("Resource Xft.dpi not specified, skipping.\n");
+    LKNG_LOGGER_DEBUG("Resource Xft.dpi not specified, skipping.\n");
     goto init_dpi_end;
   }
 
   char *endptr;
   double in_dpi = strtod(resource, &endptr);
   if (in_dpi == HUGE_VAL || dpi < 0 || *endptr != '\0' || endptr == resource) {
-    DEBUG("Xft.dpi = %s is an invalid number and couldn't be parsed.\n",
-          resource);
+    LKNG_LOGGER_DEBUG(
+        "Xft.dpi = %s is an invalid number and couldn't be parsed.\n",
+        resource);
     dpi = 0;
     goto init_dpi_end;
   }
   dpi = (long)round(in_dpi);
 
-  DEBUG("Found Xft.dpi = %ld.\n", dpi);
+  LKNG_LOGGER_DEBUG("Found Xft.dpi = %ld.\n", dpi);
 
 init_dpi_end:
   if (resource != NULL) {
@@ -70,9 +73,9 @@ init_dpi_end:
   }
 
   if (dpi == 0) {
-    DEBUG("Using fallback for calculating DPI.\n");
+    LKNG_LOGGER_DEBUG("Using fallback for calculating DPI.\n");
     dpi = init_dpi_fallback();
-    DEBUG("Using dpi = %ld\n", dpi);
+    LKNG_LOGGER_DEBUG("Using dpi = %ld\n", dpi);
   }
 }
 

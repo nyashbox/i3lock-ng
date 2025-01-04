@@ -11,6 +11,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xinerama.h>
 
+#include "core/logging.h"
 #include "i3lock-ng.h"
 #include "randr.h"
 #include "xcb.h"
@@ -33,7 +34,7 @@ void randr_init(int *event_base, xcb_window_t root) {
 
   extreply = xcb_get_extension_data(conn, &xcb_randr_id);
   if (!extreply->present) {
-    DEBUG("RandR is not present, falling back to Xinerama.\n");
+    LKNG_LOGGER_DEBUG("RandR is not present, falling back to Xinerama.\n");
     _xinerama_init();
     return;
   }
@@ -46,8 +47,8 @@ void randr_init(int *event_base, xcb_window_t root) {
                                   XCB_RANDR_MINOR_VERSION),
           &err);
   if (err != NULL) {
-    DEBUG("Could not query RandR version: X11 error code %d\n",
-          err->error_code);
+    LKNG_LOGGER_DEBUG("Could not query RandR version: X11 error code %d\n",
+                      err->error_code);
     _xinerama_init();
     return;
   }
@@ -74,7 +75,7 @@ void randr_init(int *event_base, xcb_window_t root) {
 
 void _xinerama_init(void) {
   if (!xcb_get_extension_data(conn, &xcb_xinerama_id)->present) {
-    DEBUG("Xinerama extension not found, disabling.\n");
+    LKNG_LOGGER_DEBUG("Xinerama extension not found, disabling.\n");
     return;
   }
 
@@ -109,20 +110,21 @@ static bool _randr_query_monitors_15(xcb_window_t root) {
     return false;
   }
   /* RandR 1.5 available at run-time (supported by the server) */
-  DEBUG("Querying monitors using RandR 1.5\n");
+  LKNG_LOGGER_DEBUG("Querying monitors using RandR 1.5\n");
   xcb_generic_error_t *err;
   xcb_randr_get_monitors_reply_t *monitors = xcb_randr_get_monitors_reply(
       conn, xcb_randr_get_monitors(conn, root, true), &err);
   if (err != NULL) {
-    DEBUG("Could not get RandR monitors: X11 error code %d\n", err->error_code);
+    LKNG_LOGGER_DEBUG("Could not get RandR monitors: X11 error code %d\n",
+                      err->error_code);
     free(err);
     /* Fall back to RandR ≤ 1.4 */
     return false;
   }
 
   int screens = xcb_randr_get_monitors_monitors_length(monitors);
-  DEBUG("%d RandR monitors found (timestamp %d)\n", screens,
-        monitors->timestamp);
+  LKNG_LOGGER_DEBUG("%d RandR monitors found (timestamp %d)\n", screens,
+                    monitors->timestamp);
 
   Rect *resolutions = malloc(screens * sizeof(Rect));
   /* No memory? Just keep on using the old information. */
@@ -141,8 +143,9 @@ static bool _randr_query_monitors_15(xcb_window_t root) {
     resolutions[screen].y = monitor_info->y;
     resolutions[screen].width = monitor_info->width;
     resolutions[screen].height = monitor_info->height;
-    DEBUG("found RandR monitor: %d x %d at %d x %d\n", monitor_info->width,
-          monitor_info->height, monitor_info->x, monitor_info->y);
+    LKNG_LOGGER_DEBUG("found RandR monitor: %d x %d at %d x %d\n",
+                      monitor_info->width, monitor_info->height,
+                      monitor_info->x, monitor_info->y);
   }
   free(xr_resolutions);
   xr_resolutions = resolutions;
@@ -161,7 +164,7 @@ static bool _randr_query_outputs_14(xcb_window_t root) {
   if (!has_randr) {
     return false;
   }
-  DEBUG("Querying outputs using RandR ≤ 1.4\n");
+  LKNG_LOGGER_DEBUG("Querying outputs using RandR ≤ 1.4\n");
 
   /* Get screen resources (primary output, crtcs, outputs, modes) */
   xcb_randr_get_screen_resources_current_cookie_t rcookie;
@@ -170,7 +173,7 @@ static bool _randr_query_outputs_14(xcb_window_t root) {
   xcb_randr_get_screen_resources_current_reply_t *res =
       xcb_randr_get_screen_resources_current_reply(conn, rcookie, NULL);
   if (res == NULL) {
-    DEBUG("Could not query screen resources.\n");
+    LKNG_LOGGER_DEBUG("Could not query screen resources.\n");
     return false;
   }
 
@@ -216,7 +219,8 @@ static bool _randr_query_outputs_14(xcb_window_t root) {
     xcb_randr_get_crtc_info_reply_t *crtc;
     icookie = xcb_randr_get_crtc_info(conn, output->crtc, cts);
     if ((crtc = xcb_randr_get_crtc_info_reply(conn, icookie, NULL)) == NULL) {
-      DEBUG("Skipping output: could not get CRTC (0x%08x)\n", output->crtc);
+      LKNG_LOGGER_DEBUG("Skipping output: could not get CRTC (0x%08x)\n",
+                        output->crtc);
       free(output);
       continue;
     }
@@ -226,8 +230,8 @@ static bool _randr_query_outputs_14(xcb_window_t root) {
     resolutions[screen].width = crtc->width;
     resolutions[screen].height = crtc->height;
 
-    DEBUG("found RandR output: %d x %d at %d x %d\n", crtc->width, crtc->height,
-          crtc->x, crtc->y);
+    LKNG_LOGGER_DEBUG("found RandR output: %d x %d at %d x %d\n", crtc->width,
+                      crtc->height, crtc->x, crtc->y);
 
     screen++;
 
@@ -254,8 +258,8 @@ void _xinerama_query_screens(void) {
   cookie = xcb_xinerama_query_screens_unchecked(conn);
   reply = xcb_xinerama_query_screens_reply(conn, cookie, &err);
   if (!reply) {
-    DEBUG("Couldn't get Xinerama screens: X11 error code %d\n",
-          err->error_code);
+    LKNG_LOGGER_DEBUG("Couldn't get Xinerama screens: X11 error code %d\n",
+                      err->error_code);
     free(err);
     return;
   }
@@ -274,9 +278,9 @@ void _xinerama_query_screens(void) {
     resolutions[screen].y = screen_info[screen].y_org;
     resolutions[screen].width = screen_info[screen].width;
     resolutions[screen].height = screen_info[screen].height;
-    DEBUG("found Xinerama screen: %d x %d at %d x %d\n",
-          screen_info[screen].width, screen_info[screen].height,
-          screen_info[screen].x_org, screen_info[screen].y_org);
+    LKNG_LOGGER_DEBUG("found Xinerama screen: %d x %d at %d x %d\n",
+                      screen_info[screen].width, screen_info[screen].height,
+                      screen_info[screen].x_org, screen_info[screen].y_org);
   }
 
   free(xr_resolutions);
