@@ -1,0 +1,17 @@
+
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025 nyashbox and Contributors
+
+set(CPACK_PACKAGE_NAME "i3lock-ng")
+set(CPACK_PACKAGE_FILE_NAME "i3lock-ng-@PROJECT_VERSION@")
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_VENDOR "nyashbox and Contributors")
+
+set(CPACK_PACKAGE_CONTACT "nyashbox <https://github.com/nyashbox>")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS 
+    "libc6 (>= 2.14), libcairo2 (>= 1.6.4-5~), libev4 (>= 1:4.04), "
+    "libpam0g (>= 0.99.7.1), libxcb-image0 (>= 0.2.1), "
+    "libxcb-randr0 (>= 1.12), libxcb-util1 (>= 0.4.0), "
+    "libxcb-xinerama0, libxcb-xkb1, libxcb-xrm0 (>= 0.0.0), "
+    "libxcb1, libxkbcommon-x11-0 (>= 0.5.0), libxkbcommon0 (>= 0.5.0)")

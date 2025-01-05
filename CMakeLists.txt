@@ -17,3 +17,11 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
 add_subdirectory(src)
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/cmake/CPackConfig.cmake.in
+    ${CMAKE_BINARY_DIR}/CPackConfig.cmake
+    @ONLY
+)
+include(${CMAKE_BINARY_DIR}/CPackConfig.cmake)
+include(CPack)
