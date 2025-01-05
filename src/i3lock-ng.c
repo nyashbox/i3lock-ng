@@ -301,6 +301,14 @@ static void input_done(void) {
   unlock_state = STATE_STARTED;
   redraw_screen();
 
+  // skip authentication check when running in debug mode
+  if (debug_mode) {
+    clear_password_memory();
+
+    ev_break(EV_DEFAULT, EVBREAK_ALL);
+    return;
+  }
+
 #ifdef __OpenBSD__
   struct passwd *pw;
 
