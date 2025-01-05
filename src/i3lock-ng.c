@@ -1042,8 +1042,6 @@ int main(int argc, char *argv[]) {
   lkng_logger_init(&LKNG_DEFAULT_LOGGER);
   lkng_logger_add_stderr_sink(&LKNG_DEFAULT_LOGGER);
 
-  LKNG_LOGGER_FATAL("This is fatal message!\n");
-
   struct passwd *pw;
   char *username;
   char *image_path = NULL;
