@@ -20,8 +20,6 @@
 #include <xcb/xkb.h>
 #ifdef __OpenBSD__
 #include <bsd_auth.h>
-#else
-#include <security/pam_appl.h>
 #endif
 #include <cairo.h>
 #include <cairo/cairo-xcb.h>
@@ -43,6 +41,8 @@
 #include "randr.h"
 #include "unlock_indicator.h"
 #include "xcb.h"
+
+#include "auth/auth.h"
 
 #define TSTAMP_N_SECS(n) (n * 1.0)
 #define TSTAMP_N_MINS(n) (60 * TSTAMP_N_SECS(n))
@@ -77,10 +77,6 @@ char color[7] = "a3a3a3";
 uint32_t last_resolution[2];
 xcb_window_t win;
 static xcb_cursor_t cursor;
-#ifndef __OpenBSD__
-static pam_handle_t *pam_handle;
-static bool pam_cleanup;
-#endif
 int input_position = 0;
 /* Holds the password you enter (in UTF-8). */
 static char password[512];
@@ -324,17 +320,8 @@ static void input_done(void) {
     return;
   }
 #else
-  if (pam_authenticate(pam_handle, 0) == PAM_SUCCESS) {
-    LKNG_LOGGER_DEBUG("successfully authenticated\n");
+  if (lkng_auth(LKNG_AUTH_PASSWORD, password) == LKNG_AUTH_SUCCESS) {
     clear_password_memory();
-
-    /* PAM credentials should be refreshed, this will for example update any
-     * kerberos tickets. Related to credentials pam_end() needs to be called to
-     * cleanup any temporary credentials like kerberos /tmp/krb5cc_pam_* files
-     * which may of been left behind if the refresh of the credentials failed.
-     */
-    pam_setcred(pam_handle, PAM_REFRESH_CRED);
-    pam_cleanup = true;
 
     ev_break(EV_DEFAULT, EVBREAK_ALL);
     return;
@@ -846,41 +833,6 @@ static bool verify_png_image(const char *image_path) {
   return true;
 }
 
-#ifndef __OpenBSD__
-/*
- * Callback function for PAM. We only react on password request callbacks.
- *
- */
-static int conv_callback(int num_msg, const struct pam_message **msg,
-                         struct pam_response **resp, void *appdata_ptr) {
-  if (num_msg == 0) {
-    return 1;
-  }
-
-  /* PAM expects an array of responses, one for each message */
-  if ((*resp = calloc(num_msg, sizeof(struct pam_response))) == NULL) {
-    perror("calloc");
-    return 1;
-  }
-
-  for (int c = 0; c < num_msg; c++) {
-    if (msg[c]->msg_style != PAM_PROMPT_ECHO_OFF &&
-        msg[c]->msg_style != PAM_PROMPT_ECHO_ON) {
-      continue;
-    }
-
-    /* return code is currently not used but should be set to zero */
-    resp[c]->resp_retcode = 0;
-    if ((resp[c]->resp = strdup(password)) == NULL) {
-      perror("strdup");
-      return 1;
-    }
-  }
-
-  return 0;
-}
-#endif
-
 /*
  * This callback is only a dummy, see xcb_prepare_cb and xcb_check_cb.
  * See also man libev(3): "ev_prepare" and "ev_check" - customise your event
@@ -1054,10 +1006,6 @@ int main(int argc, char *argv[]) {
   char *username;
   char *image_path = NULL;
   char *image_raw_format = NULL;
-#ifndef __OpenBSD__
-  int ret;
-  struct pam_conv conv = {conv_callback, NULL};
-#endif
   int curs_choice = CURS_NONE;
   int o;
   int longoptind = 0;
@@ -1177,19 +1125,6 @@ int main(int argc, char *argv[]) {
   /* We need (relatively) random numbers for highlighting a random part of
    * the unlock indicator upon keypresses. */
   srand(time(NULL));
-
-#ifndef __OpenBSD__
-  /* Initialize PAM */
-  if ((ret = pam_start("i3lock", username, &conv, &pam_handle)) !=
-      PAM_SUCCESS) {
-    errx(EXIT_FAILURE, "PAM: %s", pam_strerror(pam_handle, ret));
-  }
-
-  if ((ret = pam_set_item(pam_handle, PAM_TTY, getenv("DISPLAY"))) !=
-      PAM_SUCCESS) {
-    errx(EXIT_FAILURE, "PAM: %s", pam_strerror(pam_handle, ret));
-  }
-#endif
 
 /* Using mlock() as non-super-user seems only possible in Linux.
  * Users of other operating systems should use encrypted swap/no swap
@@ -1368,12 +1303,6 @@ int main(int argc, char *argv[]) {
    * file descriptor becomes readable). */
   ev_invoke(main_loop, xcb_check, 0);
   ev_loop(main_loop, 0);
-
-#ifndef __OpenBSD__
-  if (pam_cleanup) {
-    pam_end(pam_handle, PAM_SUCCESS);
-  }
-#endif
 
   if (stolen_focus == XCB_NONE) {
     return 0;
