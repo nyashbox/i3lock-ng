@@ -35,6 +35,7 @@ add_library(i3lock-ng::i3lock-ng ALIAS i3lock_ng_obj)
 target_include_directories(i3lock_ng_obj
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
 )
 target_link_libraries(i3lock_ng_obj
     PUBLIC 
