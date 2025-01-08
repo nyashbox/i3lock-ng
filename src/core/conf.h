@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-#include <core/logging.h>
+#include <core/log.h>
 
 //! @brief i3lock-ng config
 typedef struct {

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2025 nyashbox and Contributors
 
-#ifndef _I3LOCK_NG_CORE_LOGGING_H_
-#define _I3LOCK_NG_CORE_LOGGING_H_
+#ifndef _I3LOCK_NG_CORE_LOG_H_
+#define _I3LOCK_NG_CORE_LOG_H_
 
 #define LKNG_LOGGER_MAX_SINKS 4
 
@@ -124,4 +124,4 @@ lkng_logger_level_t lkng_logger_get_level(lkng_logger_t *logger);
 
 //! @}
 
-#endif // _I3LOCK_NG_CORE_LOGGING_H_
+#endif // _I3LOCK_NG_CORE_LOG_H_

@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <xcb/xcb_xrm.h>
 
-#include "core/logging.h"
+#include <core/log.h>
 
 extern bool debug_mode;
 

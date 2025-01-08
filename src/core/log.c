@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "logging.h"
+#include <core/log.h>
 
 //! insert new sink
 static int _lkng_logger_insert_sink(lkng_logger_t *logger, FILE *sink);

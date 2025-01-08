@@ -20,7 +20,7 @@
 #include "xcb.h"
 
 #include <core/conf.h>
-#include <core/logging.h>
+#include <core/log.h>
 
 #define BUTTON_RADIUS 90
 #define BUTTON_SPACE (BUTTON_RADIUS + 5)

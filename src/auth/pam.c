@@ -5,8 +5,8 @@
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
 
-#include "../core/logging.h"
-#include "pam.h"
+#include <auth/pam.h>
+#include <core/log.h>
 
 static int password_conv(int num_msg, const struct pam_message **msg,
                          struct pam_response **resp, void *appdata_ptr) {

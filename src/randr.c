@@ -3,7 +3,6 @@
 // Copyright (c) 2009-2010 Michael Stapelberg and Contributors
 // Copyright (c) 2025 nyashbox and Contributors
 
-#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,9 +10,10 @@
 #include <xcb/xcb.h>
 #include <xcb/xinerama.h>
 
-#include "core/logging.h"
 #include "randr.h"
 #include "xcb.h"
+
+#include <core/log.h>
 
 /* Number of Xinerama screens which are currently present. */
 int xr_screens = 0;

@@ -42,7 +42,7 @@
 #include <auth/auth.h>
 #include <config.h>
 #include <core/conf.h>
-#include <core/logging.h>
+#include <core/log.h>
 
 #define TSTAMP_N_SECS(n) (n * 1.0)
 #define TSTAMP_N_MINS(n) (60 * TSTAMP_N_SECS(n))
