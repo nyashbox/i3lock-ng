@@ -19,7 +19,8 @@
 #include "unlock_indicator.h"
 #include "xcb.h"
 
-#include "core/logging.h"
+#include <core/conf.h>
+#include <core/logging.h>
 
 #define BUTTON_RADIUS 90
 #define BUTTON_SPACE (BUTTON_RADIUS + 5)
@@ -29,8 +30,6 @@
 /*******************************************************************************
  * Variables defined in i3lock.c.
  ******************************************************************************/
-
-extern bool debug_mode;
 
 /* The current position in the input buffer. Useful to determine if any
  * characters of the password have already been entered or not. */
@@ -42,9 +41,6 @@ extern xcb_window_t win;
 /* The current resolution of the X11 root window. */
 extern uint32_t last_resolution[2];
 
-/* Whether the unlock indicator is enabled (defaults to true). */
-extern bool unlock_indicator;
-
 /* List of pressed modifiers, or NULL if none are pressed. */
 extern char *modifier_string;
 /* Name of the current keyboard layout or NULL if not initialized. */
@@ -53,15 +49,9 @@ char *layout_string = NULL;
 /* A Cairo surface containing the specified image (-i), if any. */
 extern cairo_surface_t *img;
 
-/* Whether the image should be tiled. */
-extern bool tile;
 /* The background color to use (in hex). */
-extern char color[7];
+char *color = LKNG_DEFAULT_CONFIG.color;
 
-/* Whether the failed attempts should be displayed. */
-extern bool show_failed_attempts;
-/* Whether keyboard layout should be displayed. */
-extern bool show_keyboard_layout;
 /* Number of failed unlock attempts. */
 extern int failed_attempts;
 
@@ -209,7 +199,7 @@ void draw_image(xcb_pixmap_t bg_pixmap, uint32_t *resolution) {
   cairo_fill(xcb_ctx);
 
   if (img) {
-    if (!tile) {
+    if (!LKNG_DEFAULT_CONFIG.tile) {
       cairo_set_source_surface(xcb_ctx, img, 0, 0);
       cairo_paint(xcb_ctx);
     } else {
@@ -224,7 +214,7 @@ void draw_image(xcb_pixmap_t bg_pixmap, uint32_t *resolution) {
     }
   }
 
-  if (unlock_indicator &&
+  if (LKNG_DEFAULT_CONFIG.unlock_indicator &&
       (unlock_state >= STATE_KEY_PRESSED || auth_state > STATE_AUTH_IDLE)) {
     cairo_scale(ctx, scaling_factor, scaling_factor);
     /* Draw a (centered) circle with transparent background. */
@@ -311,7 +301,7 @@ void draw_image(xcb_pixmap_t bg_pixmap, uint32_t *resolution) {
       if (unlock_state == STATE_NOTHING_TO_DELETE) {
         text = "No input";
       }
-      if (show_failed_attempts && failed_attempts > 0) {
+      if (LKNG_DEFAULT_CONFIG.show_failed_attempts && failed_attempts > 0) {
         if (failed_attempts > 999) {
           text = "> 999";
         } else {
@@ -332,7 +322,7 @@ void draw_image(xcb_pixmap_t bg_pixmap, uint32_t *resolution) {
       cairo_set_font_size(ctx, 14.0);
       display_button_text(ctx, modifier_string, 28., use_dark_text);
     }
-    if (show_keyboard_layout && layout_string != NULL) {
+    if (LKNG_DEFAULT_CONFIG.show_keyboard_layout && layout_string != NULL) {
       cairo_set_font_size(ctx, 14.0);
       display_button_text(ctx, layout_string, -28., use_dark_text);
     }

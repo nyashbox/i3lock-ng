@@ -3,8 +3,6 @@
 // Copyright (c) 2009-2010 Michael Stapelberg and Contributors
 // Copyright (c) 2025 nyashbox and Contributors
 
-#include <config.h>
-
 #include <assert.h>
 #include <err.h>
 #include <errno.h>
@@ -35,14 +33,16 @@
 #include <xcb/randr.h>
 #include <xcb/xcb_aux.h>
 
-#include "core/logging.h"
 #include "cursors.h"
 #include "dpi.h"
 #include "randr.h"
 #include "unlock_indicator.h"
 #include "xcb.h"
 
-#include "auth/auth.h"
+#include <auth/auth.h>
+#include <config.h>
+#include <core/conf.h>
+#include <core/logging.h>
 
 #define TSTAMP_N_SECS(n) (n * 1.0)
 #define TSTAMP_N_MINS(n) (60 * TSTAMP_N_SECS(n))
@@ -73,18 +73,13 @@ const char HELP_MSG[] =
     "\t-h, --help    Display this help message and exit.\n"
     "\t-v, --version Display version and exit.\n";
 
-char color[7] = "a3a3a3";
 uint32_t last_resolution[2];
 xcb_window_t win;
 static xcb_cursor_t cursor;
 int input_position = 0;
 /* Holds the password you enter (in UTF-8). */
 static char password[512];
-static bool beep = false;
-bool debug_mode = false;
-bool unlock_indicator = true;
 char *modifier_string = NULL;
-static bool dont_fork = false;
 struct ev_loop *main_loop;
 static struct ev_timer *clear_auth_wrong_timeout;
 static struct ev_timer *clear_indicator_timeout;
@@ -92,9 +87,6 @@ static struct ev_timer *discard_passwd_timeout;
 extern unlock_state_t unlock_state;
 extern auth_state_t auth_state;
 int failed_attempts = 0;
-bool show_failed_attempts = false;
-bool show_keyboard_layout = false;
-bool retry_verification = false;
 
 struct xkb_state *xkb_state;
 static struct xkb_context *xkb_context;
@@ -106,9 +98,6 @@ static uint8_t xkb_base_error;
 static int randr_base = -1;
 
 cairo_surface_t *img = NULL;
-bool tile = false;
-bool ignore_empty_password = false;
-bool skip_repeated_empty_password = false;
 
 /* isutf, u8_dec © 2005 Jeff Bezanson, public domain */
 #define isutf(c) (((c) & 0xC0) != 0x80)
@@ -207,7 +196,7 @@ static void clear_password_memory(void) {
      * index plus (!) the value of the beep variable. This prevents the
      * compiler from optimizing the calls away, since the value of 'beep'
      * is not known at compile-time. */
-    vpassword[c] = c + (int)beep;
+    vpassword[c] = c + (int)LKNG_DEFAULT_CONFIG.beep;
   }
 #endif
 }
@@ -269,8 +258,8 @@ static void clear_auth_wrong(EV_P_ ev_timer *w, int revents) {
   STOP_TIMER(clear_auth_wrong_timeout);
 
   /* retry with input done during auth verification */
-  if (retry_verification) {
-    retry_verification = false;
+  if (LKNG_DEFAULT_CONFIG.retry_verification) {
+    LKNG_DEFAULT_CONFIG.retry_verification = false;
     finish_input();
   }
 }
@@ -298,7 +287,7 @@ static void input_done(void) {
   redraw_screen();
 
   // skip authentication check when running in debug mode
-  if (debug_mode) {
+  if (LKNG_DEFAULT_CONFIG.debug_mode) {
     clear_password_memory();
 
     ev_break(EV_DEFAULT, EVBREAK_ALL);
@@ -328,14 +317,14 @@ static void input_done(void) {
   }
 #endif
 
-  if (debug_mode) {
+  if (LKNG_DEFAULT_CONFIG.debug_mode) {
     fprintf(stderr, "Authentication failure\n");
   }
 
   auth_state = STATE_AUTH_WRONG;
   failed_attempts += 1;
   clear_input();
-  if (unlock_indicator) {
+  if (LKNG_DEFAULT_CONFIG.unlock_indicator) {
     redraw_screen();
   }
 
@@ -349,7 +338,7 @@ static void input_done(void) {
   STOP_TIMER(clear_indicator_timeout);
 
   /* beep on authentication failure, if enabled */
-  if (beep) {
+  if (LKNG_DEFAULT_CONFIG.beep) {
     xcb_bell(conn, 100);
     xcb_flush(conn);
   }
@@ -365,7 +354,8 @@ static bool skip_without_validation(void) {
     return false;
   }
 
-  if (skip_repeated_empty_password || ignore_empty_password) {
+  if (LKNG_DEFAULT_CONFIG.skip_repeated_empty_password ||
+      LKNG_DEFAULT_CONFIG.ignore_empty_password) {
     return true;
   }
 
@@ -430,7 +420,7 @@ static void handle_key_press(xcb_key_press_event_t *event) {
     }
 
     if (auth_state == STATE_AUTH_WRONG) {
-      retry_verification = true;
+      LKNG_DEFAULT_CONFIG.retry_verification = true;
       return;
     }
 
@@ -439,14 +429,14 @@ static void handle_key_press(xcb_key_press_event_t *event) {
       return;
     }
     finish_input();
-    skip_repeated_empty_password = true;
+    LKNG_DEFAULT_CONFIG.skip_repeated_empty_password = true;
     return;
   default:
-    skip_repeated_empty_password = false;
+    LKNG_DEFAULT_CONFIG.skip_repeated_empty_password = false;
     // A new password is being entered, but a previous one is pending.
     // Discard the old one and clear the retry_verification flag.
-    if (retry_verification) {
-      retry_verification = false;
+    if (LKNG_DEFAULT_CONFIG.retry_verification) {
+      LKNG_DEFAULT_CONFIG.retry_verification = false;
       clear_input();
     }
   }
@@ -458,7 +448,7 @@ static void handle_key_press(xcb_key_press_event_t *event) {
       LKNG_LOGGER_DEBUG("C-u pressed\n");
       clear_input();
       /* Also hide the unlock indicator */
-      if (unlock_indicator) {
+      if (LKNG_DEFAULT_CONFIG.unlock_indicator) {
         clear_indicator();
       }
       return;
@@ -523,7 +513,7 @@ static void handle_key_press(xcb_key_press_event_t *event) {
   input_position += n - 1;
   LKNG_LOGGER_DEBUG("current password = %.*s\n", input_position, password);
 
-  if (unlock_indicator) {
+  if (LKNG_DEFAULT_CONFIG.unlock_indicator) {
     unlock_state = STATE_KEY_ACTIVE;
     redraw_screen();
     unlock_state = STATE_KEY_PRESSED;
@@ -882,7 +872,7 @@ static void xcb_check_cb(EV_P_ ev_check *w, int revents) {
   while ((event = xcb_poll_for_event(conn)) != NULL) {
     if (event->response_type == 0) {
       xcb_generic_error_t *error = (xcb_generic_error_t *)event;
-      if (debug_mode) {
+      if (LKNG_DEFAULT_CONFIG.debug_mode) {
         fprintf(stderr, "X11 Error received! sequence 0x%x, error_code = %d\n",
                 error->sequence, error->error_code);
       }
@@ -904,10 +894,10 @@ static void xcb_check_cb(EV_P_ ev_check *w, int revents) {
 
     case XCB_MAP_NOTIFY:
       maybe_close_sleep_lock_fd();
-      if (!dont_fork) {
+      if (!LKNG_DEFAULT_CONFIG.dont_fork) {
         /* After the first MapNotify, we never fork again. We don’t
          * expect to get another MapNotify, but better be sure… */
-        dont_fork = true;
+        LKNG_DEFAULT_CONFIG.dont_fork = true;
 
         /* In the parent process, we exit */
         if (fork() != 0) {
@@ -1004,9 +994,7 @@ int main(int argc, char *argv[]) {
 
   struct passwd *pw;
   char *username;
-  char *image_path = NULL;
   char *image_raw_format = NULL;
-  int curs_choice = CURS_NONE;
   int o;
   int longoptind = 0;
   struct option longopts[] = {
@@ -1036,10 +1024,10 @@ int main(int argc, char *argv[]) {
     case 'v':
       errx(EXIT_SUCCESS, "version " I3LOCK_VERSION);
     case 'n':
-      dont_fork = true;
+      LKNG_DEFAULT_CONFIG.dont_fork = true;
       break;
     case 'b':
-      beep = true;
+      LKNG_DEFAULT_CONFIG.beep = true;
       break;
     case 'd':
       fprintf(stderr, "DPMS support has been removed from i3lock. Please see "
@@ -1058,7 +1046,8 @@ int main(int argc, char *argv[]) {
         arg++;
       }
 
-      if (strlen(arg) != 6 || sscanf(arg, "%06[0-9a-fA-F]", color) != 1) {
+      if (strlen(arg) != 6 ||
+          sscanf(arg, "%06[0-9a-fA-F]", LKNG_DEFAULT_CONFIG.color) != 1) {
         errx(EXIT_FAILURE, "color is invalid, it must be given in 3-byte "
                            "hexadecimal format: rrggbb");
       }
@@ -1066,30 +1055,30 @@ int main(int argc, char *argv[]) {
       break;
     }
     case 'u':
-      unlock_indicator = false;
+      LKNG_DEFAULT_CONFIG.unlock_indicator = false;
       break;
     case 'i':
-      image_path = strdup(optarg);
+      LKNG_DEFAULT_CONFIG.image_path = strdup(optarg);
       break;
     case 't':
-      tile = true;
+      LKNG_DEFAULT_CONFIG.tile = true;
       break;
     case 'p':
       if (!strcmp(optarg, "win")) {
-        curs_choice = CURS_WIN;
+        LKNG_DEFAULT_CONFIG.cursor_choice = CURS_WIN;
       } else if (!strcmp(optarg, "default")) {
-        curs_choice = CURS_DEFAULT;
+        LKNG_DEFAULT_CONFIG.cursor_choice = CURS_DEFAULT;
       } else {
         errx(EXIT_FAILURE, "i3lock: Invalid pointer type given. Expected one "
                            "of \"win\" or \"default\".");
       }
       break;
     case 'e':
-      ignore_empty_password = true;
+      LKNG_DEFAULT_CONFIG.ignore_empty_password = true;
       break;
     case 0:
       if (strcmp(longopts[longoptind].name, "debug") == 0) {
-        debug_mode = true;
+        LKNG_DEFAULT_CONFIG.debug_mode = true;
         lkng_logger_set_level(&LKNG_DEFAULT_LOGGER, LOG_DEBUG);
         lkng_logger_add_stdout_sink(&LKNG_DEFAULT_LOGGER);
       } else if (strcmp(longopts[longoptind].name, "raw") == 0) {
@@ -1097,10 +1086,10 @@ int main(int argc, char *argv[]) {
       }
       break;
     case 'f':
-      show_failed_attempts = true;
+      LKNG_DEFAULT_CONFIG.show_failed_attempts = true;
       break;
     case 'k':
-      show_keyboard_layout = true;
+      LKNG_DEFAULT_CONFIG.show_keyboard_layout = true;
       break;
     case 'h':
       code = EXIT_SUCCESS;
@@ -1181,7 +1170,7 @@ int main(int argc, char *argv[]) {
     locale = getenv("LANG");
   }
   if (!locale || !*locale) {
-    if (debug_mode) {
+    if (LKNG_DEFAULT_CONFIG.debug_mode) {
       fprintf(stderr, "Can't detect your locale, fallback to C\n");
     }
     locale = "C";
@@ -1202,36 +1191,38 @@ int main(int argc, char *argv[]) {
   xcb_change_window_attributes(conn, screen->root, XCB_CW_EVENT_MASK,
                                (uint32_t[]){XCB_EVENT_MASK_STRUCTURE_NOTIFY});
 
-  if (image_raw_format != NULL && image_path != NULL) {
+  if (image_raw_format != NULL && LKNG_DEFAULT_CONFIG.image_path != NULL) {
     /* Read image. 'read_raw_image' returns NULL on error,
      * so we don't have to handle errors here. */
-    img = read_raw_image(image_path, image_raw_format);
-  } else if (verify_png_image(image_path)) {
+    img = read_raw_image(LKNG_DEFAULT_CONFIG.image_path, image_raw_format);
+  } else if (verify_png_image(LKNG_DEFAULT_CONFIG.image_path)) {
     /* Create a pixmap to render on, fill it with the background color */
-    img = cairo_image_surface_create_from_png(image_path);
+    img = cairo_image_surface_create_from_png(LKNG_DEFAULT_CONFIG.image_path);
     /* In case loading failed, we just pretend no -i was specified. */
     if (cairo_surface_status(img) != CAIRO_STATUS_SUCCESS) {
-      fprintf(stderr, "Could not load image \"%s\": %s\n", image_path,
+      fprintf(stderr, "Could not load image \"%s\": %s\n",
+              LKNG_DEFAULT_CONFIG.image_path,
               cairo_status_to_string(cairo_surface_status(img)));
       img = NULL;
     }
   }
 
-  free(image_path);
+  free(LKNG_DEFAULT_CONFIG.image_path);
   free(image_raw_format);
 
   /* Pixmap on which the image is rendered to (if any) */
-  xcb_pixmap_t bg_pixmap =
-      create_bg_pixmap(conn, screen, last_resolution, color);
+  xcb_pixmap_t bg_pixmap = create_bg_pixmap(conn, screen, last_resolution,
+                                            LKNG_DEFAULT_CONFIG.color);
   draw_image(bg_pixmap, last_resolution);
 
   xcb_window_t stolen_focus = find_focused_window(conn, screen->root);
 
   /* Open the fullscreen window, already with the correct pixmap in place */
-  win = open_fullscreen_window(conn, screen, color, bg_pixmap);
+  win = open_fullscreen_window(conn, screen, LKNG_DEFAULT_CONFIG.color,
+                               bg_pixmap);
   xcb_free_pixmap(conn, bg_pixmap);
 
-  cursor = create_cursor(conn, screen, win, curs_choice);
+  cursor = create_cursor(conn, screen, win, LKNG_DEFAULT_CONFIG.cursor_choice);
 
   /* Display the "locking…" message while trying to grab the pointer/keyboard.
    */
