@@ -21,8 +21,11 @@ find_library(libev REQUIRED NAMES ev)
 set(I3LOCK-NG_SRCS
     core/log.c
     core/conf.c
+    core/opts.c
+
     auth/auth.c
     auth/pam.c
+
     dpi.c
     randr.c
     unlock_indicator.c

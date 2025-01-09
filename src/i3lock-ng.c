@@ -40,9 +40,12 @@
 #include "xcb.h"
 
 #include <auth/auth.h>
-#include <config.h>
+
 #include <core/conf.h>
 #include <core/log.h>
+#include <core/opts.h>
+
+#include <config.h>
 
 #define TSTAMP_N_SECS(n) (n * 1.0)
 #define TSTAMP_N_MINS(n) (60 * TSTAMP_N_SECS(n))
@@ -995,109 +998,8 @@ int main(int argc, char *argv[]) {
   struct passwd *pw;
   char *username;
   char *image_raw_format = NULL;
-  int o;
-  int longoptind = 0;
-  struct option longopts[] = {
-      {"version", no_argument, NULL, 'v'},
-      {"nofork", no_argument, NULL, 'n'},
-      {"beep", no_argument, NULL, 'b'},
-      {"dpms", no_argument, NULL, 'd'},
-      {"color", required_argument, NULL, 'c'},
-      {"pointer", required_argument, NULL, 'p'},
-      {"debug", no_argument, NULL, 0},
-      {"help", no_argument, NULL, 'h'},
-      {"no-unlock-indicator", no_argument, NULL, 'u'},
-      {"image", required_argument, NULL, 'i'},
-      {"raw", required_argument, NULL, 0},
-      {"tiling", no_argument, NULL, 't'},
-      {"ignore-empty-password", no_argument, NULL, 'e'},
-      {"inactivity-timeout", required_argument, NULL, 'I'},
-      {"show-failed-attempts", no_argument, NULL, 'f'},
-      {"show-keyboard-layout", no_argument, NULL, 'k'},
-      {NULL, no_argument, NULL, 0}};
 
-  int code = EXIT_FAILURE;
-  char *optstring = "hvnbdc:p:ui:teI:fk";
-  while ((o = getopt_long(argc, argv, optstring, longopts, &longoptind)) !=
-         -1) {
-    switch (o) {
-    case 'v':
-      errx(EXIT_SUCCESS, "version " I3LOCK_VERSION);
-    case 'n':
-      LKNG_DEFAULT_CONFIG.dont_fork = true;
-      break;
-    case 'b':
-      LKNG_DEFAULT_CONFIG.beep = true;
-      break;
-    case 'd':
-      fprintf(stderr, "DPMS support has been removed from i3lock. Please see "
-                      "the manpage i3lock(1).\n");
-      break;
-    case 'I': {
-      fprintf(stderr, "Inactivity timeout only makes sense with DPMS, which "
-                      "was removed. Please see the manpage i3lock(1).\n");
-      break;
-    }
-    case 'c': {
-      char *arg = optarg;
-
-      /* Skip # if present */
-      if (arg[0] == '#') {
-        arg++;
-      }
-
-      if (strlen(arg) != 6 ||
-          sscanf(arg, "%06[0-9a-fA-F]", LKNG_DEFAULT_CONFIG.color) != 1) {
-        errx(EXIT_FAILURE, "color is invalid, it must be given in 3-byte "
-                           "hexadecimal format: rrggbb");
-      }
-
-      break;
-    }
-    case 'u':
-      LKNG_DEFAULT_CONFIG.unlock_indicator = false;
-      break;
-    case 'i':
-      LKNG_DEFAULT_CONFIG.image_path = strdup(optarg);
-      break;
-    case 't':
-      LKNG_DEFAULT_CONFIG.tile = true;
-      break;
-    case 'p':
-      if (!strcmp(optarg, "win")) {
-        LKNG_DEFAULT_CONFIG.cursor_choice = CURS_WIN;
-      } else if (!strcmp(optarg, "default")) {
-        LKNG_DEFAULT_CONFIG.cursor_choice = CURS_DEFAULT;
-      } else {
-        errx(EXIT_FAILURE, "i3lock: Invalid pointer type given. Expected one "
-                           "of \"win\" or \"default\".");
-      }
-      break;
-    case 'e':
-      LKNG_DEFAULT_CONFIG.ignore_empty_password = true;
-      break;
-    case 0:
-      if (strcmp(longopts[longoptind].name, "debug") == 0) {
-        LKNG_DEFAULT_CONFIG.debug_mode = true;
-        lkng_logger_set_level(&LKNG_DEFAULT_LOGGER, LOG_DEBUG);
-        lkng_logger_add_stdout_sink(&LKNG_DEFAULT_LOGGER);
-      } else if (strcmp(longopts[longoptind].name, "raw") == 0) {
-        image_raw_format = strdup(optarg);
-      }
-      break;
-    case 'f':
-      LKNG_DEFAULT_CONFIG.show_failed_attempts = true;
-      break;
-    case 'k':
-      LKNG_DEFAULT_CONFIG.show_keyboard_layout = true;
-      break;
-    case 'h':
-      code = EXIT_SUCCESS;
-      /* fallthrough */
-    default:
-      errx(code, HELP_MSG);
-    }
-  }
+  lkng_opts_parse(&LKNG_DEFAULT_CONFIG, argc, argv);
 
   if ((pw = getpwuid(getuid())) == NULL) {
     err(EXIT_FAILURE, "getpwuid() failed");
