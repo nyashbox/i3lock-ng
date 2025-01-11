@@ -41,8 +41,6 @@ static int _lkng_config_file_handler(void *user, const char *section,
 
   if (CONFIG_MATCH("core", "fork")) {
     config->dont_fork = !(CONFIG_READ_BOOL(value));
-  } else if (CONFIG_MATCH("core", "beep")) {
-    config->beep = CONFIG_READ_BOOL(value);
   } else if (CONFIG_MATCH("core", "debug")) {
     config->debug_mode = CONFIG_READ_BOOL(value);
   } else if (CONFIG_MATCH("background", "color")) {

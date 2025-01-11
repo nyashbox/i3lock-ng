@@ -166,22 +166,11 @@ static bool load_compose_table(const char *locale) {
  *
  */
 static void clear_password_memory(void) {
-#ifdef HAVE_EXPLICIT_BZERO
-  /* Use explicit_bzero(3) which was explicitly designed not to be
-   * optimized out by the compiler. */
-  explicit_bzero(password, strlen(password));
-#else
-  /* A volatile pointer to the password buffer to prevent the compiler from
-   * optimizing this out. */
-  volatile char *vpassword = password;
-  for (size_t c = 0; c < sizeof(password); c++) {
-    /* We store a non-random pattern which consists of the (irrelevant)
-     * index plus (!) the value of the beep variable. This prevents the
-     * compiler from optimizing the calls away, since the value of 'beep'
-     * is not known at compile-time. */
-    vpassword[c] = c + (int)LKNG_DEFAULT_CONFIG.beep;
+  volatile char *volatile_password = (volatile char *)password;
+
+  for (int i = 0; i < sizeof(password); i++) {
+    *volatile_password++ = 0;
   }
-#endif
 }
 
 ev_timer *start_timer(ev_timer *timer_obj, ev_tstamp timeout,
@@ -319,12 +308,6 @@ static void input_done(void) {
   /* Cancel the clear_indicator_timeout, it would hide the unlock indicator
    * too early. */
   STOP_TIMER(clear_indicator_timeout);
-
-  /* beep on authentication failure, if enabled */
-  if (LKNG_DEFAULT_CONFIG.beep) {
-    xcb_bell(conn, 100);
-    xcb_flush(conn);
-  }
 }
 
 static void redraw_timeout(EV_P_ ev_timer *w, int revents) {

@@ -18,7 +18,6 @@
 static struct option LONGOPTS[] = {
     {"version", no_argument, NULL, 'v'},
     {"nofork", no_argument, NULL, 'n'},
-    {"beep", no_argument, NULL, 'b'},
     {"dpms", no_argument, NULL, 'd'},
     {"color", required_argument, NULL, 'c'},
     {"pointer", required_argument, NULL, 'p'},
@@ -50,13 +49,12 @@ static const char HELP_MSG[] =
     "\n"
     "\t    --debug  Enable debug logging.\n"
     "\t-n, --nofork Don't fork after starting.\n"
-    "\t-b, --beep   Enable beeping.\n"
     "\n"
     "\t-h, --help    Display this help message and exit.\n"
     "\t-v, --version Display version and exit.\n";
 
 void lkng_opts_parse(lkng_config_t *conf, int argc, char **argv) {
-  const char *shortopts = "hvnbdc:p:ui:teI:fk";
+  const char *shortopts = "hvndc:p:ui:teI:fk";
 
   int o;
   int longindex = 0;
@@ -69,11 +67,6 @@ void lkng_opts_parse(lkng_config_t *conf, int argc, char **argv) {
     }
     case 'n': {
       LKNG_DEFAULT_CONFIG.dont_fork = true;
-
-      break;
-    }
-    case 'b': {
-      LKNG_DEFAULT_CONFIG.beep = true;
 
       break;
     }
