@@ -15,6 +15,7 @@ pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
 pkg_check_modules(PAM REQUIRED IMPORTED_TARGET pam)
 pkg_check_modules(XKB_COMMON REQUIRED IMPORTED_TARGET xkbcommon>=0.5.0)
 pkg_check_modules(XKB_COMMON_X11 REQUIRED IMPORTED_TARGET xkbcommon-x11>=0.5.0)
+pkg_check_modules(INIH REQUIRED IMPORTED_TARGET inih)
 
 find_library(libev REQUIRED NAMES ev)
 
@@ -54,6 +55,7 @@ target_link_libraries(i3lock_ng_obj
         PkgConfig::PAM
         PkgConfig::XKB_COMMON
         PkgConfig::XKB_COMMON_X11
+        PkgConfig::INIH
 
         ev
         m

@@ -999,6 +999,11 @@ int main(int argc, char *argv[]) {
   char *username;
   char *image_raw_format = NULL;
 
+  // parse config files
+  char **config_paths = lkng_config_get_default_paths();
+  lkng_config_parse(&LKNG_DEFAULT_CONFIG, (const char **)config_paths);
+  lkng_config_free_default_paths(config_paths);
+
   lkng_opts_parse(&LKNG_DEFAULT_CONFIG, argc, argv);
 
   if ((pw = getpwuid(getuid())) == NULL) {
