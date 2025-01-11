@@ -36,7 +36,6 @@
 #include "cursors.h"
 #include "dpi.h"
 #include "randr.h"
-#include "unlock_indicator.h"
 #include "xcb.h"
 
 #include <auth/auth.h>
@@ -44,6 +43,8 @@
 #include <core/conf.h>
 #include <core/log.h>
 #include <core/opts.h>
+
+#include <widgets/unlock_indicator.h>
 
 #include <config.h>
 

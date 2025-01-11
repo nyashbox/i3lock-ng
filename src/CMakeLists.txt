@@ -27,9 +27,10 @@ set(I3LOCK-NG_SRCS
     auth/auth.c
     auth/pam.c
 
+    widgets/unlock_indicator.c
+
     dpi.c
     randr.c
-    unlock_indicator.c
     xcb.c
 )
 

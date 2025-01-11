@@ -18,7 +18,7 @@
 #include <xcb/xcb_image.h>
 
 #include "cursors.h"
-#include "unlock_indicator.h"
+#include <widgets/unlock_indicator.h>
 
 extern auth_state_t auth_state;
 
